@@ -1,23 +1,27 @@
 ---
-title: "Life Expectancy Analysis"
+output:
+  html_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, ECHO=FALSE}
+```{r, include=FALSE}
 library(plotly)
+library(knitr)
 ```
 
+# Providing data reproductibility
 
 ```{r}
 set.seed(0)
 ```
 
-```{r}
+```{r, results='asis'}
 data <- read.csv("Life_Expectancy_Data.csv")
-head(data)
+kable(data[1:10, ])
 ```
 
 
@@ -48,7 +52,4 @@ for (col in na_columns){
 fig <- plot_ly(y = data_new[, "Alcohol"], type = "box", quartilemethod="exclusive")
 
 fig
-```
-```{r}
-knitr::knit('Analysis.Rmd', 'Readme.md')
 ```
