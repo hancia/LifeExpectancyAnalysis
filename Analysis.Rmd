@@ -1,0 +1,57 @@
+---
+title: "Life Expectancy Analysis"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, ECHO=FALSE}
+library(plotly)
+```
+
+
+```{r}
+set.seed(0)
+```
+
+```{r}
+data <- read.csv("Life_Expectancy_Data.csv")
+head(data)
+```
+
+
+```{r}
+nrow(data)
+```
+```{r}
+summary(data)
+```
+
+```{r}
+data_new <- data[complete.cases(data[ , 'Life.expectancy']),]
+```
+
+```{r}
+na_columns <- list("Alcohol", "Hepatitis.B", "BMI", "Polio", "Total.expenditure", "Diphtheria", "GDP", "Population", "thinness..1.19.years", "thinness.5.9.years", "Income.composition.of.resources", "Schooling")
+
+for (col in na_columns){
+    m <- median(data_new[ , col], na.rm=TRUE)
+    print(col)
+    print(m)
+    data_new[ , col][is.na(data_new[ , col])] <- m
+}
+```
+
+
+```{r}
+fig <- plot_ly(y = data_new[, "Alcohol"], type = "box", quartilemethod="exclusive")
+
+fig
+```
+
+
+```{r}
+knitr::knit('Readme.Rmd', 'Readme.md')
+markdown::markdownToHTML('Readme.md', 'Readme.html')
+```
