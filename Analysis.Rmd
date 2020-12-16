@@ -49,9 +49,3 @@ fig <- plot_ly(y = data_new[, "Alcohol"], type = "box", quartilemethod="exclusiv
 
 fig
 ```
-
-
-```{r}
-knitr::knit('Readme.Rmd', 'Readme.md')
-markdown::markdownToHTML('Readme.md', 'Readme.html')
-```
