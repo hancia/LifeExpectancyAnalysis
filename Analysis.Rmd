@@ -4,6 +4,8 @@ output:
     toc: true
 ---
 
+For the interactive
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -11,7 +13,9 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, include=FALSE}
 library(plotly)
 library(knitr)
+library(kableExtra)
 ```
+
 
 # Providing data reproductibility
 
@@ -21,7 +25,7 @@ set.seed(0)
 
 ```{r, results='asis'}
 data <- read.csv("Life_Expectancy_Data.csv")
-kable(data[1:10, ])
+kable(head(data), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
 
