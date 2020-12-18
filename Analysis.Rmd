@@ -17,7 +17,7 @@ Authors: Hanna Klimczak, Kamil Pluciński
 
 # Analysis summary
 
-In the following summary, we tried to determine which factors play important role in life expectancy. We used a dataset containing information on life expectancy of citizens of 183 countries in the time span of 5 years. We loaded the data, filled missing values with median for each attribute, then we performed value distribution analysis and we plotted the correlation matrix. We also took a look at the change of life expectancy across the years per country, though we decided not to take time into account while making our predictions. Before training the regressors, we also applied normalization techniques to deal with skewed distributions of our attributes. From trained regressors, we selected the most promising model and we assessed the features that contributed the most to making the final predictions. Out of this analysis, we draw conclusions as to what makes for a long life. As expected, numer of HIV deaths, as well as overall adult mortality contributed to smaller life expectancy significantly. The other factors were the productive resource usage indicator and average schooling years - as we understand, good education can cause a healthier lifestyle, as well as better access to good healthcare, which most definitely can influence life expectancy. Furthermore, BMI and thinness of children are important as well, which proves dietitians right in linking the correct weight with health. Surprisingly, we have not found the alcohol consumption to have high impact. We then tested out best performing model on a fresh dataset and compared it's results to true labels. It turns out the predictions were quite good. We also listed some ways of improving our predictions.
+In the following summary, we tried to determine which factors play important role in life expectancy. We used a dataset containing information on life expectancy of citizens of 183 countries in the time span of 15 years. We loaded the data, filled missing values with median for each attribute, then we performed value distribution analysis and we plotted the correlation matrix. We also took a look at the change of life expectancy across the years per country, though we decided not to take time into account while making our predictions. Before training the regressors, we also applied normalization techniques to deal with skewed distributions of our attributes. From trained regressors, we selected the most promising model and we assessed the features that contributed the most to making the final predictions. Out of this analysis, we draw conclusions as to what makes for a long life. As expected, numer of HIV deaths, as well as overall adult mortality contributed to smaller life expectancy significantly. The other factors were the productive resource usage indicator and average schooling years - as we understand, good education can cause a healthier lifestyle, as well as better access to good healthcare, which most definitely can influence life expectancy. Furthermore, BMI and thinness of children are important as well, which proves dietitians right in linking the correct weight with health. Surprisingly, we have not found the alcohol consumption to have high impact. We then tested out best performing model on a fresh dataset and compared it's results to true labels. It turns out the predictions were quite good. We also listed some ways of improving our predictions.
 
 # Libraries used
 
@@ -96,7 +96,7 @@ fig <- fig %>% layout(autosize = F, width = 800, height = 500)
 fig
 ```
 
-```{r}
+```{r, warning=FALSE}
 plots <- lapply(quantitative_cols, function(var) {
   plot_ly(x = data_new[, var], name=var)%>%
   add_histogram()
@@ -245,6 +245,8 @@ Overall, the performance of three different types of regression is quite similar
 ggplot(varImp(ridge))
 
 ```
+
+
 The above plot shows feature importance for our regressor. We can see that most important attributes are 'HIV.AIDS', 'Income.composition.of.resources' and 'Adult.Mortality', which seems to be a natural conclusion - the number of HIV deaths as well as the mortality of adults are most definitely negatively correlated to life expectancy: -0.55 and -0.69 according to our correlation matrix. 'Income.composition.of.resources' and 'Schooling' are an interesting finding, but it might be the case that better education leads to better health decisions, the correlation discovered by our correlation matrix is as follows: 0.68 and 0.71. BMI and thinness of children also have high standings - which further proves that obesity can be an important factor in having a long and healthy life. Surprisingly, the alcohol consumption does not seem to have high impact on life expectancy.  
 
 Now, we will use our best model to make predictions on the test set.
