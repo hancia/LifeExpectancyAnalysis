@@ -260,4 +260,4 @@ fig <- plot_ly(test_data, x = test_data$Life.expectancy,y = pred, type = 'scatte
 
 fig
 ```
-THe above plot shows the performance of our model. As we can see, even though the line is not perfect, the overall trend is promising and the quality of predictions is generally good. Still, RMSE was pretty high and more work might need to be done if the model was to be put in production. Further improvements could be: adding regularization, feature engineering with application of domain knowledge, using a more complex model or increasing the dataset. 
+The above plot shows the performance of our model. As we can see, even though the line is not perfect, the overall trend is promising and the quality of predictions is generally good. Still, RMSE was pretty high and more work might need to be done if the model was to be put in production. Further improvements could be: adding regularization, feature engineering with application of domain knowledge, using a more complex model or increasing the dataset. 
