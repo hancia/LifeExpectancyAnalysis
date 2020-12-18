@@ -45,7 +45,7 @@ kable(head(data), "html") %>% kable_styling("striped") %>% scroll_box(width = "1
 nrow(data)
 ```
 ```{r}
-summary(data)
+kable(summary(data), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
 # Dealing with missing values
@@ -119,19 +119,28 @@ The above chart gives us important information about the correlation between var
 For our prediction, we will need to drop some of the features that are highly correlated. We will drop thinness.5.9.years, percentage.expenditure and infant.deaths, as their correlation to our decision variable is weaker than features correlated to them.
 
 # Interavtive plot for average life duration per country with respect to year
+
+The following plot is fully interactive - hover over selected line to see a specific value, select one country by double clicking on it in the legend. In one country view, you can then single click on one country to add it to the plot. If you want to return to the view of all countries - double click on the legend again. 
 ```{r}
 
+countries <- unique(data_new$Country)
+fig <- plot_ly(data, x = data_new[data_new$Country == 'Afghanistan', 'Year'])
 
-fig <- plot_ly(data, x = data_new[, 'Year'], y = data_new[, 'Life.expectancy'], name = ~data_new[, 'Country'], type = 'scatter', mode = 'lines', color=~data_new[, 'Country']) 
+for(name in countries){
+  fig <- fig %>% add_trace(y = data_new[data_new$Country == name, 'Life.expectancy'], name = name, type = 'scatter', mode = 'lines') 
+}
+
 fig <- fig %>% layout(legend = list(orientation = 'h'))
 
 
 fig
 ```
+
+
 # Data preparation
 ```{r}
 
-regression_data <- data_new[, !names(data_new) %in% c("Country", "thinness.5.9.years", "percentage.expenditure", "infant.deaths")]
+regression_data <- data_new[, !names(data_new) %in% c("Country", "thinness.5.9.years", "percentage.expenditure", "infant.deaths", "Year")]
 
 
 kable(head(regression_data), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
@@ -174,6 +183,7 @@ control <- trainControl(
 linear <- train(Life.expectancy ~ .,
                data = train_data,
                trControl = control,
+               preProcess = c('scale', 'center'),
                method = "lm")
 linear
 ```
@@ -185,6 +195,7 @@ linear
 lasso <- train(Life.expectancy ~ .,
                data = train_data,
                trControl = control,
+               preProcess = c('scale', 'center'),
                method = "lasso")
 lasso
 ```
@@ -192,13 +203,14 @@ lasso
 ridge <- train(Life.expectancy ~ .,
                data = train_data,
                trControl = control,
+               preProcess = c('scale', 'center'),
                method = "ridge")
 ridge
 ```
 # Attribute importance analysis for the best model found
 
 ```{r}
-ggplot(varImp(lasso))
+ggplot(varImp(ridge))
 ```
 
 # What attribute contributes the most to longer or shorter life duration?
