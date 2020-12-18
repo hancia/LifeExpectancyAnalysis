@@ -87,19 +87,36 @@ quantitive_cols = c("Year", "Life.expectancy", "Adult.Mortality", "infant.deaths
 plots <- lapply(quantitive_cols, function(var) {
   plot_ly(y = data_new[, var], type = "box", name=var, quartilemethod="exclusive")
 })
-fig <- subplot(plots, nrows=4, margin=0.05)
-fig <- fig %>% layout(legend = list(orientation = 'h'))
+fig <- subplot(plots, nrows=6)
+fig <- fig %>% layout(autosize = F, width = 800, height = 500)
 fig
 ```
+
+
+
+
+
+
+
+
+
+
 ```{r}
 plots <- lapply(quantitive_cols, function(var) {
   plot_ly(x = data_new[, var], name=var)%>%
   add_histogram()
 })
-fig <- subplot(plots, nrows=4, margin=0.05)
-fig <- fig %>% layout(legend = list(orientation = 'h'))
+fig <- subplot(plots, nrows=6)
+fig <- fig %>% layout(autosize = F, width = 800, height = 500)
 fig
 ```
+
+
+
+
+
+
+
 
 ```{r}
 p1 <- plot_ly(data_new, x = ~Status) %>%
