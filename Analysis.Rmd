@@ -15,6 +15,10 @@ Sys.Date()
 
 Authors: Hanna Klimczak, Kamil Pluciński
 
+# Analysis summary
+
+In the following summary, we tried to determine which factors play important role in life expectancy. We used a dataset containing information on life expectancy of citizens of 183 countries in the time span of 5 years. We loaded the data, filled missing values with median for each attribute, then we performed value distribution analysis and we plotted the correlation matrix. We also took a look at the change of life expectancy across the years per country, though we decided not to take time into account while making our predictions. Before training the regressors, we also applied normalization techniques to deal with skewed distributions of our attributes. From trained regressors, we selected the most promising model and we assessed the features that contributed the most to making the final predictions. Out of this analysis, we draw conclusions as to what makes for a long life. As expected, numer of HIV deaths, as well as overall adult mortality contributed to smaller life expectancy significantly. The other factors were the productive resource usage indicator and average schooling years - as we understand, good education can cause a healthier lifestyle, as well as better access to good healthcare, which most definitely can influence life expectancy. Furthermore, BMI and thinness of children are important as well, which proves dietitians right in linking the correct weight with health. Surprisingly, we have not found the alcohol consumption to have high impact. We then tested out best performing model on a fresh dataset and compared it's results to true labels. It turns out the predictions were quite good. We also listed some ways of improving our predictions.
+
 # Libraries used
 
 ```{r, message=FALSE}
@@ -57,7 +61,7 @@ As we can see from the summary above, there are some missing values in the datas
 data_new <- data[complete.cases(data[ , 'Life.expectancy']),]
 ```
 
-After this operation, we still encounter missing values in the following columns: "Alcohol", "Hepatitis.B", "BMI", "Polio", "Total.expenditure", "Diphtheria", "GDP", "Population", "thinness..1.19.years", "thinness.5.9.years", "Income.composition.of.resources", "Schooling". We will fill these NA values with median for each column.
+After this operation, we still encounter missing values in the following columns: "Alcohol", "Hepatitis.B", "BMI", "Polio", "Total.expenditure", "Diphtheria", "GDP", "Population", "thinness..1.19.years", "thinness.5.9.years", "Income.composition.of.resources", "Schooling". We will fill these NA values with median for each column. We chose median rather than mean as it is more robust to outliers.
 
 ```{r}
 na_columns <- list("Alcohol", "Hepatitis.B", "BMI", "Polio", "Total.expenditure", "Diphtheria", "GDP", "Population", "thinness..1.19.years", "thinness.5.9.years", "Income.composition.of.resources", "Schooling")
@@ -77,14 +81,14 @@ As we can see, we have successfully dealt with missing values.
 
 # In-depth analysis of attributes (i.e. value distribution)
 
-```{r}
-names(data_new)
-```
+Now, we will perform the value distribution analysis of the attributes. For that, we will be using box plots and histograms. We will only perform this analysis for quantitative columns.
+
+
 ```{r, warning=FALSE}
 
-quantitive_cols = c("Year", "Life.expectancy", "Adult.Mortality", "infant.deaths", "Alcohol", "percentage.expenditure", "Hepatitis.B", "Measles", "BMI", "under.five.deaths", "Polio", "Total.expenditure", "Diphtheria","HIV.AIDS","GDP","Population", "thinness..1.19.years","thinness.5.9.years",     "Income.composition.of.resources", "Schooling")
+quantitative_cols = c("Year", "Life.expectancy", "Adult.Mortality", "infant.deaths", "Alcohol", "percentage.expenditure", "Hepatitis.B", "Measles", "BMI", "under.five.deaths", "Polio", "Total.expenditure", "Diphtheria","HIV.AIDS","GDP","Population", "thinness..1.19.years","thinness.5.9.years",     "Income.composition.of.resources", "Schooling")
 
-plots <- lapply(quantitive_cols, function(var) {
+plots <- lapply(quantitative_cols, function(var) {
   plot_ly(y = data_new[, var], type = "box", name=var, quartilemethod="exclusive")
 })
 fig <- subplot(plots, nrows=6)
@@ -92,17 +96,8 @@ fig <- fig %>% layout(autosize = F, width = 800, height = 500)
 fig
 ```
 
-
-
-
-
-
-
-
-
-
 ```{r}
-plots <- lapply(quantitive_cols, function(var) {
+plots <- lapply(quantitative_cols, function(var) {
   plot_ly(x = data_new[, var], name=var)%>%
   add_histogram()
 })
@@ -110,29 +105,21 @@ fig <- subplot(plots, nrows=6)
 fig <- fig %>% layout(autosize = F, width = 800, height = 500)
 fig
 ```
-
-
-
-
-
-
-
-
+We will also look at Status distribution, which consist of Boolean values.
 ```{r}
 p1 <- plot_ly(data_new, x = ~Status) %>%
   add_histogram()
-
 p1
 ```
-
+From this analysis, we can see that for most of the attributes, the distribution is skewed. Only 'Schooling' and 'Total.expenditure' have a distribution close to normal. From the boxplots we can also see that for most of the attributes we encounter outliers. Only 'BMI' attribute seems not to have any outliers, from the histogram we can also see that this attribute's distribution is closer to uniform than normal. 'Year' attribute's distribution is definitely uniform. 'Status' distribution is highly imbalanced and we can see the dataset mostly contains information on developing countries.
 
 # Corelation between variables (graphic presentation)
 ```{r}
-correlation_data <- data_new[quantitive_cols]
+correlation_data <- data_new[quantitative_cols]
 
 fig <- plot_ly(
-    x = quantitive_cols,
-    y = quantitive_cols,
+    x = quantitative_cols,
+    y = quantitative_cols,
     z = cor(correlation_data), type = "heatmap"
 )
 
@@ -145,7 +132,7 @@ For our prediction, we will need to drop some of the features that are highly co
 
 # Interavtive plot for average life duration per country with respect to year
 
-The following plot is fully interactive - hover over selected line to see a specific value, select one country by double clicking on it in the legend. In one country view, you can then single click on one country to add it to the plot. If you want to return to the view of all countries - double click on the legend again. 
+The following plot is fully interactive - hover over selected line to see a specific value, select one country by double clicking on it in the legend. In one country view, you can then single click some other countries to add them to the plot. If you want to return to the view of all countries - double click on the legend again. 
 ```{r}
 
 countries <- unique(data_new$Country)
@@ -162,7 +149,11 @@ fig
 ```
 
 
+From the above plot, we can see overall tendency for life expectancy to be increasing over time across all countries. For some of them, the increase is smaller than for the others, but the general trend is promising. We can see one big outlier for Haiti in 2010 - this is the time that Haiti suffered one of the biggest earthquakes of all times, resulting in the deaths of many people. 
+
 # Data preparation
+
+For the regression, we decided to drop attributes mentioned earlier, as well as 'Country' and 'Year' attributes, as we believe it does not provide much information in terms of life expectancy. 
 ```{r}
 
 regression_data <- data_new[, !names(data_new) %in% c("Country", "thinness.5.9.years", "percentage.expenditure", "infant.deaths", "Year")]
@@ -173,7 +164,7 @@ kable(head(regression_data), "html") %>% kable_styling("striped") %>% scroll_box
 ```
 # Regressor for average life duration estimation
 
-Train test valid split
+We split the data into three sets - train for training out regressors, val for assessing the performance and selecting the best model and test for calculating the final performance and comparison to the ground truth.
 ```{r}
 
 trainval_partition <- 
@@ -195,6 +186,7 @@ train_data <- trainval_data[ train_partition,]
 val_data  <- trainval_data[-train_partition,]
 ```
 
+We will be also using cross-validation to obtain more robust models.
 ```{r}
 control <- trainControl(
     method = "repeatedcv",
@@ -203,7 +195,7 @@ control <- trainControl(
 
 ```
 
-
+First, we will train a simple linear regression.
 ```{r, warning=FALSE}
 linear <- train(Life.expectancy ~ .,
                data = train_data,
@@ -213,9 +205,11 @@ linear <- train(Life.expectancy ~ .,
 linear
 ```
 
-# Model parameter tuning and accuracy calculation using R2 and RMSE measures
-
-
+```{r}
+pred <- predict(linear, val_data)
+postResample(pred = pred, obs = val_data$Life.expectancy)
+```
+Then, we will use lasso regression.
 ```{r, warning=FALSE}
 lasso <- train(Life.expectancy ~ .,
                data = train_data,
@@ -224,6 +218,12 @@ lasso <- train(Life.expectancy ~ .,
                method = "lasso")
 lasso
 ```
+
+```{r}
+pred <- predict(lasso, val_data)
+postResample(pred = pred, obs = val_data$Life.expectancy)
+```
+And finally, rigde regression. 
 ```{r, warning=FALSE}
 ridge <- train(Life.expectancy ~ .,
                data = train_data,
@@ -232,10 +232,31 @@ ridge <- train(Life.expectancy ~ .,
                method = "ridge")
 ridge
 ```
+
+```{r}
+pred <- predict(ridge, val_data)
+postResample(pred = pred, obs = val_data$Life.expectancy)
+```
+Overall, the performance of three different types of regression is quite similar - we were trying to minimize RMSE and also acquire as high Rsquared as possible. For further analysis, we will use ridge regression model.
+
 # Attribute importance analysis for the best model found
 
 ```{r}
 ggplot(varImp(ridge))
+
+```
+The above plot shows feature importance for our regressor. We can see that most important attributes are 'HIV.AIDS', 'Income.composition.of.resources' and 'Adult.Mortality', which seems to be a natural conclusion - the number of HIV deaths as well as the mortality of adults are most definitely negatively correlated to life expectancy: -0.55 and -0.69 according to our correlation matrix. 'Income.composition.of.resources' and 'Schooling' are an interesting finding, but it might be the case that better education leads to better health decisions, the correlation discovered by our correlation matrix is as follows: 0.68 and 0.71. BMI and thinness of children also have high standings - which further proves that obesity can be an important factor in having a long and healthy life. Surprisingly, the alcohol consumption does not seem to have high impact on life expectancy.  
+
+Now, we will use our best model to make predictions on the test set.
+```{r}
+pred <- predict(ridge, test_data)
+postResample(pred = pred, obs = test_data$Life.expectancy)
 ```
 
-# What attribute contributes the most to longer or shorter life duration?
+```{r}
+fig <- plot_ly(test_data, y = pred, name="Pred", type = 'scatter', mode = 'lines')
+fig <- fig %>% add_trace(y = test_data$Life.expectancy, name = "True", type = 'scatter', mode = 'lines') 
+
+fig
+```
+As we can see, the predictions made by our model are quite good - the plots have similar trends and are pretty well aligned. Still, RMSE was pretty high and more work might need to be done if the model was to be put in production. Further improvements could be: adding regularization, feature engineering with application of domain knowledge, using a more complex model or increasing the dataset. 
