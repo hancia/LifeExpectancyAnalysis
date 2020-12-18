@@ -256,9 +256,8 @@ postResample(pred = pred, obs = test_data$Life.expectancy)
 ```
 
 ```{r}
-fig <- plot_ly(test_data, y = pred, name="Pred", type = 'scatter', mode = 'lines')
-fig <- fig %>% add_trace(y = test_data$Life.expectancy, name = "True", type = 'scatter', mode = 'lines') 
+fig <- plot_ly(test_data, x = test_data$Life.expectancy,y = pred, type = 'scatter')
 
 fig
 ```
-As we can see, the predictions made by our model are quite good - the plots have similar trends and are pretty well aligned. Still, RMSE was pretty high and more work might need to be done if the model was to be put in production. Further improvements could be: adding regularization, feature engineering with application of domain knowledge, using a more complex model or increasing the dataset. 
+THe above plot shows the performance of our model. As we can see, even though the line is not perfect, the overall trend is promising and the quality of predictions is generally good. Still, RMSE was pretty high and more work might need to be done if the model was to be put in production. Further improvements could be: adding regularization, feature engineering with application of domain knowledge, using a more complex model or increasing the dataset. 
