@@ -70,7 +70,7 @@ for (col in na_columns){
 }
 ```
 ```{r}
-summary(data_new)
+kable(summary(data_new), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
 As we can see, we have successfully dealt with missing values.
@@ -83,16 +83,24 @@ names(data_new)
 ```{r, warning=FALSE}
 
 quantitive_cols = c("Year", "Life.expectancy", "Adult.Mortality", "infant.deaths", "Alcohol", "percentage.expenditure", "Hepatitis.B", "Measles", "BMI", "under.five.deaths", "Polio", "Total.expenditure", "Diphtheria","HIV.AIDS","GDP","Population", "thinness..1.19.years","thinness.5.9.years",     "Income.composition.of.resources", "Schooling")
-l <- htmltools::tagList()
 
-i <- 1
-for (col in quantitive_cols){
-  l[[i]] <- plot_ly(y = data_new[, col], type = "box",name=col, quartilemethod="exclusive")
-  i <- i + 1
-}
-
-l
+plots <- lapply(quantitive_cols, function(var) {
+  plot_ly(y = data_new[, var], type = "box", name=var, quartilemethod="exclusive")
+})
+fig <- subplot(plots, nrows=4, margin=0.05)
+fig <- fig %>% layout(legend = list(orientation = 'h'))
+fig
 ```
+```{r}
+plots <- lapply(quantitive_cols, function(var) {
+  plot_ly(x = data_new[, var], name=var)%>%
+  add_histogram()
+})
+fig <- subplot(plots, nrows=4, margin=0.05)
+fig <- fig %>% layout(legend = list(orientation = 'h'))
+fig
+```
+
 ```{r}
 p1 <- plot_ly(data_new, x = ~Status) %>%
   add_histogram()
