@@ -4,30 +4,42 @@ output:
     toc: true
 ---
 
-For the interactive
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r, include=FALSE}
+```{r}
+Sys.Date()
+```
+
+Authors: Hanna Klimczak, Kamil Pluciński
+
+# Libraries used
+
+```{r, message=FALSE}
 library(plotly)
 library(knitr)
 library(kableExtra)
+library(caret)
 ```
 
 
 # Providing data reproductibility
+To ensure that running the notebook will always return the same output, we set seed to 0.
 
 ```{r}
 set.seed(0)
 ```
+
+# Reading data from file
 
 ```{r, results='asis'}
 data <- read.csv("Life_Expectancy_Data.csv")
 kable(head(data), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
 ```
 
+# Dataset summary and basic statistics
 
 ```{r}
 nrow(data)
@@ -36,9 +48,16 @@ nrow(data)
 summary(data)
 ```
 
+# Dealing with missing values
+
+As we can see from the summary above, there are some missing values in the dataset. Due to the fact that life.expectancy is the most important attribute for our analysis, we have decided to remove all rows where life.expectancy is NA.
+
+
 ```{r}
 data_new <- data[complete.cases(data[ , 'Life.expectancy']),]
 ```
+
+After this operation, we still encounter missing values in the following columns: "Alcohol", "Hepatitis.B", "BMI", "Polio", "Total.expenditure", "Diphtheria", "GDP", "Population", "thinness..1.19.years", "thinness.5.9.years", "Income.composition.of.resources", "Schooling". We will fill these NA values with median for each column.
 
 ```{r}
 na_columns <- list("Alcohol", "Hepatitis.B", "BMI", "Polio", "Total.expenditure", "Diphtheria", "GDP", "Population", "thinness..1.19.years", "thinness.5.9.years", "Income.composition.of.resources", "Schooling")
@@ -50,10 +69,136 @@ for (col in na_columns){
     data_new[ , col][is.na(data_new[ , col])] <- m
 }
 ```
+```{r}
+summary(data_new)
+```
 
+As we can see, we have successfully dealt with missing values.
+
+# In-depth analysis of attributes (i.e. value distribution)
 
 ```{r}
-fig <- plot_ly(y = data_new[, "Alcohol"], type = "box", quartilemethod="exclusive")
+names(data_new)
+```
+```{r, warning=FALSE}
+
+quantitive_cols = c("Year", "Life.expectancy", "Adult.Mortality", "infant.deaths", "Alcohol", "percentage.expenditure", "Hepatitis.B", "Measles", "BMI", "under.five.deaths", "Polio", "Total.expenditure", "Diphtheria","HIV.AIDS","GDP","Population", "thinness..1.19.years","thinness.5.9.years",     "Income.composition.of.resources", "Schooling")
+l <- htmltools::tagList()
+
+i <- 1
+for (col in quantitive_cols){
+  l[[i]] <- plot_ly(y = data_new[, col], type = "box",name=col, quartilemethod="exclusive")
+  i <- i + 1
+}
+
+l
+```
+```{r}
+p1 <- plot_ly(data_new, x = ~Status) %>%
+  add_histogram()
+
+p1
+```
+
+
+# Corelation between variables (graphic presentation)
+```{r}
+correlation_data <- data_new[quantitive_cols]
+
+fig <- plot_ly(
+    x = quantitive_cols,
+    y = quantitive_cols,
+    z = cor(correlation_data), type = "heatmap"
+)
 
 fig
 ```
+
+The above chart gives us important information about the correlation between variables. As we can see, there is almost perfect correlation between thinness.1.19.years and thinness.5.9.years. There also appears to be a very strong correlation between GDP and percentage.expenditure (0.9), as well as infant.deaths and under.five.deaths (0.99). Naturally, we can also see a strong negative correlation between Adult.Mortality and Life.expectancy (-0.69). Schooling and life expectancy seem to be slightly correlated as well (0.71).
+
+For our prediction, we will need to drop some of the features that are highly correlated. We will drop thinness.5.9.years, percentage.expenditure and infant.deaths, as their correlation to our decision variable is weaker than features correlated to them.
+
+# Interavtive plot for average life duration per country with respect to year
+```{r}
+
+
+fig <- plot_ly(data, x = data_new[, 'Year'], y = data_new[, 'Life.expectancy'], name = ~data_new[, 'Country'], type = 'scatter', mode = 'lines', color=~data_new[, 'Country']) 
+fig <- fig %>% layout(legend = list(orientation = 'h'))
+
+
+fig
+```
+# Data preparation
+```{r}
+
+regression_data <- data_new[, !names(data_new) %in% c("Country", "thinness.5.9.years", "percentage.expenditure", "infant.deaths")]
+
+
+kable(head(regression_data), "html") %>% kable_styling("striped") %>% scroll_box(width = "100%")
+
+```
+# Regressor for average life duration estimation
+
+Train test valid split
+```{r}
+
+trainval_partition <- 
+    createDataPartition(
+        y = regression_data$Life.expectancy,
+        p = .8,
+        list = FALSE)
+
+trainval_data <- regression_data[ trainval_partition,]
+test_data  <- regression_data[-trainval_partition,]
+
+train_partition <- 
+    createDataPartition(
+        y = trainval_data$Life.expectancy,
+        p = .8,
+        list = FALSE)
+
+train_data <- trainval_data[ train_partition,]
+val_data  <- trainval_data[-train_partition,]
+```
+
+```{r}
+control <- trainControl(
+    method = "repeatedcv",
+    number = 10,
+    repeats = 5)
+
+```
+
+
+```{r, warning=FALSE}
+linear <- train(Life.expectancy ~ .,
+               data = train_data,
+               trControl = control,
+               method = "lm")
+linear
+```
+
+# Model parameter tuning and accuracy calculation using R2 and RMSE measures
+
+
+```{r, warning=FALSE}
+lasso <- train(Life.expectancy ~ .,
+               data = train_data,
+               trControl = control,
+               method = "lasso")
+lasso
+```
+```{r, warning=FALSE}
+ridge <- train(Life.expectancy ~ .,
+               data = train_data,
+               trControl = control,
+               method = "ridge")
+ridge
+```
+# Attribute importance analysis for the best model found
+
+```{r}
+ggplot(varImp(lasso))
+```
+
+# What attribute contributes the most to longer or shorter life duration?
